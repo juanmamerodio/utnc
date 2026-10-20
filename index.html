@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- GSAP 3.12 Engine for Smooth AE Physics & Interactive Graphs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <style>
     :root {
       --canvas-light: #FAF6F0;
@@ -17,10 +19,10 @@
       --terracotta: #C86D51;
       --amber-deep: #8C5A3C;
       --utn-nod: #1F5E55;
-      --glass-bg: rgba(255, 255, 255, 0.55);
-      --glass-bg-strong: rgba(255, 255, 255, 0.76);
-      --glass-border: rgba(255, 255, 255, 0.85);
-      --glass-shadow: 0 12px 32px rgba(30, 27, 24, 0.05);
+      --glass-bg: rgba(255, 255, 255, 0.62);
+      --glass-bg-strong: rgba(255, 255, 255, 0.82);
+      --glass-border: rgba(255, 255, 255, 0.88);
+      --glass-shadow: 0 16px 36px rgba(30, 27, 24, 0.06);
     }
 
     * {
@@ -39,12 +41,12 @@
       position: relative;
     }
 
-    h1, h2, h3, .font-display {
+    h1, h2, h3, h4, .font-display {
       font-family: 'Outfit', 'Poppins', sans-serif;
       letter-spacing: -0.025em;
     }
 
-    /* Ambient Warm Blurred Orbs (DeltaCafes + Apple Glassmorphism) */
+    /* Ambient Warm Blurred Orbs */
     .ambient-canvas {
       position: fixed;
       inset: 0;
@@ -56,16 +58,16 @@
     .orb {
       position: absolute;
       border-radius: 9999px;
-      filter: blur(90px);
-      opacity: 0.42;
-      transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+      filter: blur(95px);
+      opacity: 0.45;
+      will-change: transform;
     }
 
     .orb-1 {
       width: 48vw;
       height: 48vw;
-      max-width: 620px;
-      max-height: 620px;
+      max-width: 640px;
+      max-height: 640px;
       top: -12%;
       right: -8%;
       background: radial-gradient(circle, rgba(200, 109, 81, 0.42) 0%, rgba(200, 109, 81, 0) 70%);
@@ -74,64 +76,82 @@
     .orb-2 {
       width: 52vw;
       height: 52vw;
-      max-width: 680px;
-      max-height: 680px;
+      max-width: 700px;
+      max-height: 700px;
       bottom: -18%;
       left: -10%;
       background: radial-gradient(circle, rgba(140, 90, 60, 0.35) 0%, rgba(140, 90, 60, 0) 70%);
     }
 
     .orb-3 {
-      width: 34vw;
-      height: 34vw;
-      max-width: 440px;
-      max-height: 440px;
-      top: 38%;
-      left: 42%;
-      background: radial-gradient(circle, rgba(31, 94, 85, 0.14) 0%, rgba(31, 94, 85, 0) 70%);
+      width: 36vw;
+      height: 36vw;
+      max-width: 460px;
+      max-height: 460px;
+      top: 35%;
+      left: 40%;
+      background: radial-gradient(circle, rgba(31, 94, 85, 0.16) 0%, rgba(31, 94, 85, 0) 70%);
     }
 
-    /* Warm Frosted Glass Card */
+    /* Glass Cards & Elements */
     .glass-card {
       background: var(--glass-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       border: 1px solid var(--glass-border);
       border-radius: 24px;
       box-shadow: var(--glass-shadow);
-      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, background 0.35s ease;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, background 0.35s ease;
+      will-change: transform, opacity;
     }
 
     .glass-card:hover {
-      transform: translateY(-3px);
+      transform: translateY(-4px) scale(1.008);
       background: var(--glass-bg-strong);
-      box-shadow: 0 20px 44px rgba(30, 27, 24, 0.08);
+      box-shadow: 0 22px 48px rgba(30, 27, 24, 0.09);
     }
 
     .glass-pill {
-      background: rgba(255, 255, 255, 0.68);
+      background: rgba(255, 255, 255, 0.75);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.95);
       border-radius: 9999px;
       box-shadow: 0 6px 20px rgba(30, 27, 24, 0.04);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Slide Transitions */
+    .glass-pill:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Slide Stages */
     .slide-frame {
       display: none;
       opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      perspective: 1200px;
     }
 
     .slide-frame.active {
       display: flex;
       opacity: 1;
-      transform: translateY(0);
     }
 
-    /* Custom Scrollbar for Speaker Notes Drawer */
+    /* Animated Graphic Meters */
+    .meter-bar {
+      transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Waveform Pulse for Live Simulation */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 2.5s infinite ease-in-out;
+    }
+
+    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -163,7 +183,7 @@
         <span class="text-xs text-[#8C5A3C] font-medium hidden sm:inline">| UTNContenidos</span>
       </div>
       <span id="phaseBadge" class="glass-pill px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-[#8C5A3C]">
-        Portada Institucional
+        01 · Apertura Institucional
       </span>
     </div>
 
@@ -184,278 +204,529 @@
     </div>
   </header>
 
-  <!-- Main Slide Stage (8 Distinct Architectural Layouts) -->
+  <!-- Main Slide Stage (10 Diapositivas Únicas, 1 minuto por slide) -->
   <main class="relative z-10 flex-1 flex items-center justify-center w-full max-w-6xl mx-auto px-6 py-4">
 
-    <!-- SLIDE 1: PORTADA (Layout A: Editorial Asymmetric Hero) -->
+    <!-- SLIDE 1: PORTADA & SUPERVISIÓN (Hero Asimétrico con Credenciales) -->
     <section class="slide-frame active w-full flex-col justify-center py-6" data-slide="0" data-phase="01 · Apertura Institucional">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
-        <div class="lg:col-span-8">
-          <div class="inline-flex items-center gap-2 glass-pill px-4 py-1.5 mb-7">
+        <div class="lg:col-span-7 anim-hero">
+          <div class="inline-flex items-center gap-2 glass-pill px-4 py-1.5 mb-6">
             <span class="w-2 h-2 rounded-full bg-[#1F5E55]"></span>
             <span class="text-xs font-bold tracking-widest uppercase text-[#8C5A3C]">Pasantía UTN Facultad Regional Delta</span>
           </div>
-          <h1 class="font-display font-extrabold text-5xl sm:text-6xl md:text-7xl text-[#1E1B18] leading-[1.05] mb-6">
+          <h1 class="font-display font-extrabold text-5xl sm:text-6xl md:text-7xl text-[#1E1B18] leading-[1.04] mb-6">
             De la teoría al aula <span class="text-[#C86D51]">en tres toques</span>
           </h1>
-          <p class="text-xl sm:text-2xl text-[#5A524C] font-medium max-w-2xl leading-relaxed m-0">
-            <strong class="text-[#1E1B18]">UTNContenidos:</strong> planificación docente asistida, gratuita y creada desde nuestras prácticas profesionales.
+          <p class="text-xl sm:text-2xl text-[#5A524C] font-medium max-w-xl leading-relaxed m-0">
+            Devolverle las tardes de descanso al docente transformando sus propios apuntes en una clase completa, sin esfuerzo técnico.
           </p>
         </div>
 
-        <div class="lg:col-span-4">
-          <div class="glass-card p-8 border-2 border-[#C86D51]/35 flex flex-col justify-between gap-6">
+        <div class="lg:col-span-5 anim-cards">
+          <div class="glass-card p-7 sm:p-8 border-2 border-[#C86D51]/40 flex flex-col justify-between gap-6 shadow-xl">
             <div>
-              <span class="text-xs font-bold uppercase tracking-widest text-[#C86D51] block mb-1">Presentación + Demo</span>
-              <div class="font-display font-extrabold text-4xl text-[#1E1B18]">2026</div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-bold uppercase tracking-widest text-[#C86D51]">Equipo del Proyecto</span>
+                <span class="glass-pill px-2.5 py-0.5 text-[10px] font-bold text-[#8C5A3C]">2026</span>
+              </div>
+              
+              <div class="space-y-3">
+                <div class="p-4 rounded-2xl bg-white/80 border border-white flex items-center gap-3.5 shadow-sm">
+                  <div class="w-10 h-10 rounded-xl bg-[#8C5A3C]/15 text-[#8C5A3C] flex items-center justify-center font-bold text-sm shrink-0">
+                    KV
+                  </div>
+                  <div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-[#8C5A3C]">Tutora Académica</div>
+                    <div class="font-display font-bold text-lg text-[#1E1B18]">Karen Villalba</div>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white/80 border border-white flex items-center gap-3.5 shadow-sm">
+                  <div class="w-10 h-10 rounded-xl bg-[#1F5E55]/15 text-[#1F5E55] flex items-center justify-center font-bold text-sm shrink-0">
+                    LP
+                  </div>
+                  <div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-[#1F5E55]">Líderes de Proyecto</div>
+                    <div class="font-display font-bold text-base sm:text-lg text-[#1E1B18]">
+                      Juan Martin Ávila <span class="text-[#8C5A3C] font-normal">&</span> Sofía Azul Perman
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+
             <div class="h-px w-full bg-[#8C5A3C]/20"></div>
-            <div class="text-sm font-medium text-[#5A524C] space-y-1">
-              <div class="font-bold text-[#1E1B18]">Sede Campana · Buenos Aires</div>
-              <div>Ingeniería en Sistemas de Información</div>
+
+            <div class="text-xs font-semibold text-[#5A524C] flex items-center justify-between">
+              <span>Ingeniería en Sistemas · Campana</span>
+              <span class="text-[#1E1B18] font-bold">UTN FRD</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SLIDE 2: CÓMO VINIMOS A LA FACULTAD (Layout B: Connected Bridge Journey) -->
-    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="1" data-phase="02 · Cómo Llegamos a la Facultad">
+    <!-- SLIDE 2: EL PROBLEMA REAL (Gráfico Comparativo de Tiempo Semanal) -->
+    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="1" data-phase="02 · El Desafío Docente">
       <div class="w-full">
-        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">Enfoque 1 · Cómo Vinimos a la Facultad</span>
-        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-10">
-          Del aula escolar al desafío universitario
-        </h2>
-
-        <div class="relative flex flex-col md:flex-row items-center justify-between gap-6">
-          <!-- Step Node 1 -->
-          <div class="glass-card p-8 flex-1 w-full">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="px-3.5 py-1 rounded-full bg-[#8C5A3C]/15 text-[#8C5A3C] font-display font-bold text-xs uppercase tracking-wider">Punto de Partida</span>
-            </div>
-            <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-2">Nuestra Escuela</h3>
-            <p class="text-lg text-[#5A524C] leading-snug m-0">
-              Llegamos con base técnica e inquietud por probarnos fuera de los ejercicios de clase.
-            </p>
-          </div>
-
-          <!-- Center Bridge Connector -->
-          <div class="glass-pill px-5 py-3 flex items-center gap-2 shrink-0 border-2 border-[#C86D51]/40">
-            <span class="font-display font-bold text-sm text-[#C86D51]">Convenio de Pasantía</span>
-            <span class="font-display font-bold text-lg text-[#1E1B18]">→</span>
-          </div>
-
-          <!-- Step Node 2 -->
-          <div class="glass-card p-8 flex-1 w-full border-2 border-[#1F5E55]/35">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="px-3.5 py-1 rounded-full bg-[#1F5E55]/15 text-[#1F5E55] font-display font-bold text-xs uppercase tracking-wider">El Destino · UTN FRD</span>
-            </div>
-            <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-2">Comunidad Real</h3>
-            <p class="text-lg text-[#1E1B18] font-medium leading-snug m-0">
-              La facultad nos abrió sus puertas para resolver una necesidad verdadera de sus docentes.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SLIDE 3: CONTEXTO Y OBJETIVO (Layout C: Split Editorial Quote + Target Banner) -->
-    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="2" data-phase="03 · Contexto y Objetivo">
-      <div class="w-full">
-        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">Enfoque 2 y 3 · Contexto y Objetivo</span>
-        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-10">
-          Devolverle tiempo de calidad al docente
-        </h2>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-stretch">
-          <!-- Left Context Blockquote -->
-          <div class="lg:col-span-5 flex flex-col justify-center pr-2">
-            <div class="border-l-4 border-[#C86D51] pl-6 py-2">
-              <span class="text-xs font-bold uppercase tracking-widest text-[#8C5A3C] block mb-2">El Contexto en las Aulas</span>
-              <p class="font-display font-bold text-2xl sm:text-3xl text-[#1E1B18] leading-snug m-0">
-                “El problema nunca fue qué enseñar, sino las horas frente a una hoja en blanco.”
-              </p>
-            </div>
-          </div>
-
-          <!-- Right Objective Hero Card -->
-          <div class="lg:col-span-7 glass-card p-9 border-2 border-[#C86D51]/45 flex flex-col justify-between">
-            <div class="flex items-center justify-between gap-4 mb-4">
-              <span class="glass-pill px-4 py-1 text-xs font-bold uppercase tracking-wider text-[#C86D51]">Objetivo del Proyecto</span>
-              <span class="font-display font-extrabold text-3xl text-[#1F5E55]">3 Toques · $0</span>
-            </div>
-            <p class="text-xl sm:text-2xl text-[#1E1B18] font-semibold leading-relaxed m-0">
-              Que cualquier profesor arme su presentación y su guía pedagógica en minutos, desde sus propios apuntes y sin costo.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SLIDE 4: EXPERIENCIA PERSONAL — EL GIRO DEL DÍA 1 (Layout D: Horizontal Before/After Contrast Bars) -->
-    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="3" data-phase="04 · El Primer Choque con la Realidad">
-      <div class="w-full">
-        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">El Punto de Inflexión · 08 de Mayo</span>
-        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-9">
-          Teníamos el qué, nos faltaba el cómo
-        </h2>
-
-        <div class="flex flex-col gap-5">
-          <!-- Row 1: The Flawed Initial Idea -->
-          <div class="glass-card p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4 opacity-80">
-            <div class="flex items-center gap-4">
-              <span class="px-3.5 py-1.5 rounded-xl bg-[#8C5A3C]/15 text-[#8C5A3C] font-display font-bold text-sm shrink-0">Idea Inicial (Mayo)</span>
-              <span class="font-display font-bold text-xl text-[#1E1B18]">Arquitectura local inviable</span>
-            </div>
-            <p class="text-base sm:text-lg text-[#5A524C] m-0 md:text-right">
-              Servidor local propio, modelo pesado sin internet y una base de datos que no existía.
-            </p>
-          </div>
-
-          <!-- Row 2: The Real Cloud Pivot -->
-          <div class="glass-card p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4 border-2 border-[#C86D51]/55">
-            <div class="flex items-center gap-4">
-              <span class="px-3.5 py-1.5 rounded-xl bg-[#C86D51] text-white font-display font-bold text-sm shrink-0">El Giro Real (Hoy)</span>
-              <span class="font-display font-bold text-xl text-[#1E1B18]">Plataforma 100% en la nube</span>
-            </div>
-            <p class="text-base sm:text-lg text-[#1E1B18] font-medium m-0 md:text-right">
-              Acceso web inmediato desde cualquier computadora o celular, sin instalar nada.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SLIDE 5: HERRAMIENTAS UTILIZADAS (Layout E: Architectural Stack Matrix Table) -->
-    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="4" data-phase="05 · Herramientas Utilizadas">
-      <div class="w-full">
-        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">Enfoque 4 · Herramientas Utilizadas</span>
+        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">02 · El Problema Real</span>
         <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-8">
-          Herramientas modernas a costo cero
+          Preparar la clase no debería consumir tu fin de semana
         </h2>
 
-        <div class="glass-card overflow-hidden border border-white/90">
-          <div class="grid grid-cols-12 bg-white/60 px-6 py-3.5 border-b border-[#8C5A3C]/15 text-xs font-bold uppercase tracking-wider text-[#8C5A3C]">
-            <div class="col-span-4">Capa del Sistema</div>
-            <div class="col-span-4">Prototipo Alpha</div>
-            <div class="col-span-4 text-[#1F5E55]">Plataforma Final (Beta)</div>
-          </div>
-
-          <div class="divide-y divide-[#8C5A3C]/15 text-base sm:text-lg">
-            <div class="grid grid-cols-12 px-6 py-4 items-center">
-              <div class="col-span-4 font-display font-bold text-[#1E1B18]">Interfaz y Despliegue</div>
-              <div class="col-span-4 text-[#5A524C]">HTML estático</div>
-              <div class="col-span-4 font-semibold text-[#1E1B18]">Next.js 15 + Vercel</div>
-            </div>
-
-            <div class="grid grid-cols-12 px-6 py-4 items-center bg-white/30">
-              <div class="col-span-4 font-display font-bold text-[#1E1B18]">Base de Datos y Seguridad</div>
-              <div class="col-span-4 text-[#5A524C]">Google Sheets + GAS</div>
-              <div class="col-span-4 font-semibold text-[#1E1B18]">Supabase PostgreSQL</div>
-            </div>
-
-            <div class="grid grid-cols-12 px-6 py-4 items-center">
-              <div class="col-span-4 font-display font-bold text-[#1E1B18]">Motor de IA y Exportación</div>
-              <div class="col-span-4 text-[#5A524C]">Gemini directo</div>
-              <div class="col-span-4 font-semibold text-[#1E1B18]">RAG por Cátedra + Reveal.js / PDF</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SLIDE 6: RESULTADO LOGRADO (Layout F: Asymmetric Bento Showcase — 1 Hero Left + 2 Stacked Right) -->
-    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="5" data-phase="06 · Resultado del Proyecto">
-      <div class="w-full">
-        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">Enfoque 5 · Resultado Alcanzado</span>
-        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-9">
-          Control total y diseño para todos
-        </h2>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          <!-- Big Hero Feature Left -->
-          <div class="lg:col-span-7 glass-card p-8 sm:p-9 border-2 border-[#C86D51]/45 flex flex-col justify-between">
+        <!-- Infografía Visual de Comparación de Tiempo -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-stretch anim-cards">
+          <div class="lg:col-span-5 glass-card p-8 flex flex-col justify-between border-t-4 border-t-[#C86D51]">
             <div>
-              <span class="glass-pill px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#C86D51] inline-block mb-4">El Corazón Pedagógico</span>
-              <h3 class="font-display font-extrabold text-3xl sm:text-4xl text-[#1E1B18] mb-3">
-                4 entregas + retoque quirúrgico
-              </h3>
-              <p class="text-lg text-[#5A524C] leading-relaxed m-0">
-                Genera plan de clase, enfoques, diapositivas y pizarra. Permite reformular una sola diapositiva o editarla a mano sin perder el resto.
-              </p>
+              <span class="glass-pill px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#C86D51] inline-block mb-4">La Realidad Tradicional</span>
+              <h3 class="font-display font-bold text-3xl text-[#1E1B18] mb-2">4 a 6 horas</h3>
+              <p class="text-sm font-semibold text-[#8C5A3C] mb-6">Por semana frente a una hoja en blanco</p>
+              
+              <ul class="space-y-3 text-sm sm:text-base text-[#5A524C]">
+                <li class="flex items-center gap-2.5">
+                  <span class="w-2 h-2 rounded-full bg-[#C86D51]"></span>
+                  <span>Maquetar diapositivas desde cero</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <span class="w-2 h-2 rounded-full bg-[#C86D51]"></span>
+                  <span>Calcular minutos de cada explicación</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <span class="w-2 h-2 rounded-full bg-[#C86D51]"></span>
+                  <span>Cansancio acumulado antes de pisar el aula</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-6 pt-4 border-t border-[#8C5A3C]/20 text-xs font-bold text-[#8C5A3C]">
+              TIEMPO PERDIDO EN RUTINA MECÁNICA
             </div>
           </div>
 
-          <!-- Right Stacked Compact KPIs -->
-          <div class="lg:col-span-5 flex flex-col gap-5 justify-between">
-            <div class="glass-card p-6 flex items-center gap-5">
-              <div class="font-display font-extrabold text-4xl text-[#8C5A3C] shrink-0">18 px</div>
-              <p class="text-base text-[#1E1B18] font-medium leading-snug m-0">
-                Accesibilidad 50+ pensada para la vista y el celular de cada docente.
+          <div class="lg:col-span-7 glass-card p-8 flex flex-col justify-between border-2 border-[#1F5E55]/40 bg-white/75 shadow-xl">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="glass-pill px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#1F5E55]">Con UTNContenidos</span>
+                <span class="font-display font-extrabold text-3xl text-[#1F5E55]">3 Minutos</span>
+              </div>
+              <h3 class="font-display font-bold text-2xl sm:text-3xl text-[#1E1B18] mb-4">
+                Tu conocimiento manda, la herramienta resuelve lo pesado
+              </h3>
+              <p class="text-base sm:text-lg text-[#5A524C] leading-relaxed mb-6">
+                Ingresás con tu legajo, elegís el tema y tenés diapositivas, cronograma didáctico y pizarrón armados con tus propios apuntes.
               </p>
+
+              <!-- Barra Gráfica Visual -->
+              <div class="p-4 rounded-2xl bg-[#FAF6F0] border border-[#8C5A3C]/20">
+                <div class="flex justify-between text-xs font-bold text-[#1E1B18] mb-2">
+                  <span>Ahorro de Tiempo Docente</span>
+                  <span class="text-[#1F5E55]">92% de tiempo recuperado</span>
+                </div>
+                <div class="w-full bg-[#8C5A3C]/20 h-4 rounded-full overflow-hidden flex">
+                  <div class="bg-[#1F5E55] h-full meter-bar rounded-full" style="width: 92%;"></div>
+                </div>
+              </div>
             </div>
 
-            <div class="glass-card p-6 flex items-center gap-5">
-              <div class="font-display font-extrabold text-4xl text-[#1F5E55] shrink-0">36 / 36</div>
-              <p class="text-base text-[#1E1B18] font-medium leading-snug m-0">
-                Pruebas automatizadas en verde y privacidad de apuntes por cátedra.
-              </p>
+            <div class="mt-6 pt-4 border-t border-[#1F5E55]/20 text-xs font-bold text-[#1F5E55]">
+              RECUPERÁS TUS TARDES Y LLEGÁS DESCANSADO A DAR CLASE
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SLIDE 7: EXPERIENCIA PERSONAL Y APRENDIZAJES (Layout G: Dual Editorial Columns) -->
-    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="6" data-phase="07 · Experiencia y Aprendizajes">
+    <!-- SLIDE 3: EL PUNTO DE INFLEXIÓN (Diagrama de Giro Mayo vs Hoy) -->
+    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="2" data-phase="03 · El Primer Choque">
       <div class="w-full">
-        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">Enfoque 6 y 7 · Experiencia Personal y Aprendizajes</span>
-        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-9">
-          Crecer como estudiantes y profesionales
+        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">03 · El Punto de Inflexión</span>
+        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-8">
+          Chocar con la realidad nos enseñó a pensar en vos
         </h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-          <div class="glass-card p-8 border-t-4 border-t-[#C86D51]">
-            <span class="text-xs font-bold uppercase tracking-widest text-[#C86D51] block mb-2">Experiencia Personal</span>
-            <h3 class="font-display font-bold text-2xl sm:text-3xl text-[#1E1B18] mb-3">Salir del trabajo práctico</h3>
-            <p class="text-lg text-[#5A524C] leading-relaxed m-0">
-              Trabajar con tutores y profesores reales nos enseñó a escuchar críticas, equivocarnos rápido y construir con empatía.
-            </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch anim-cards">
+          <!-- Mayo: Fantasía Técnica Inviable -->
+          <div class="glass-card p-8 flex flex-col justify-between opacity-80 border-dashed border-2 border-[#8C5A3C]/40">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="glass-pill px-3 py-1 text-xs font-bold text-[#8C5A3C]">08 de Mayo · El Error Inicial</span>
+                <span class="text-2xl">❌</span>
+              </div>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">La Fantasía Tecnológica</h3>
+              <p class="text-base text-[#5A524C] leading-relaxed mb-4">
+                Pensamos en servidores locales en cada máquina, modelos gigantes sin internet y bases de datos que no existían.
+              </p>
+              <div class="p-3.5 rounded-xl bg-red-50/70 border border-red-200 text-xs font-semibold text-red-800">
+                Resultado: Ningún profesor iba a instalar software pesado ni pelear con configuraciones.
+              </div>
+            </div>
+            <div class="text-xs font-bold text-[#8C5A3C] mt-6">TENÍAMOS EL QUÉ, NOS FALTABA EL CÓMO</div>
           </div>
 
-          <div class="glass-card p-8 border-t-4 border-t-[#1F5E55]">
-            <span class="text-xs font-bold uppercase tracking-widest text-[#1F5E55] block mb-2">Aprendizajes Llevados</span>
-            <h3 class="font-display font-bold text-2xl sm:text-3xl text-[#1E1B18] mb-3">Primero escribir, después programar</h3>
-            <p class="text-lg text-[#5A524C] leading-relaxed m-0">
-              Documentar cada decisión, cuidar la seguridad y transformar cada límite técnico en una solución simple.
-            </p>
+          <!-- Hoy: La Solución Humana en la Nube -->
+          <div class="glass-card p-8 flex flex-col justify-between border-2 border-[#C86D51]/50 bg-white/80 shadow-lg">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="glass-pill px-3 py-1 text-xs font-bold text-[#C86D51]">El Giro Real · Lo que logramos</span>
+                <span class="text-2xl">✨</span>
+              </div>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">Simple, Web y al Instante</h3>
+              <p class="text-base text-[#1E1B18] font-medium leading-relaxed mb-4">
+                Una plataforma en la nube a costo cero: entrás desde tu navegador o celular, sin instalar nada y en segundos estás armando tu clase.
+              </p>
+              <div class="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs font-semibold text-emerald-900">
+                Resultado: Cero fricción de adopción para docentes de cualquier edad.
+              </div>
+            </div>
+            <div class="text-xs font-bold text-[#C86D51] mt-6">HECHO A MEDIDA DE LAS PERSONAS, NO DEL CÓDIGO</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SLIDE 8: PRUEBA EN VIVO DEL SISTEMA (Layout H: Center Spotlight Launchpad) -->
+    <!-- SLIDE 4: EVOLUCIÓN REAL (Línea de Hitos Prácticos) -->
+    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="3" data-phase="04 · Evolución del Proyecto">
+      <div class="w-full">
+        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">04 · Construcción Paso a Paso</span>
+        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-8">
+          Aprender de los errores para que a vos nunca te falle
+        </h2>
+
+        <!-- Timeline Visual Horizontal Conectado -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 anim-cards">
+          <div class="glass-card p-7 relative flex flex-col justify-between">
+            <div>
+              <div class="w-9 h-9 rounded-2xl bg-[#C86D51] text-white font-display font-bold flex items-center justify-center mb-4 shadow-sm">
+                1
+              </div>
+              <span class="text-xs font-bold uppercase tracking-wider text-[#8C5A3C] block mb-1">Junio</span>
+              <h3 class="font-display font-bold text-xl text-[#1E1B18] mb-2">Salida a Internet</h3>
+              <p class="text-sm sm:text-base text-[#5A524C] leading-relaxed m-0">
+                El sistema salió de la computadora personal y quedó accesible en la web pública con arquitectura sólida.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#8C5A3C]/15 text-xs font-semibold text-[#8C5A3C]">
+              Disponibilidad inmediata
+            </div>
+          </div>
+
+          <div class="glass-card p-7 relative flex flex-col justify-between border-2 border-[#8C5A3C]/35">
+            <div>
+              <div class="w-9 h-9 rounded-2xl bg-[#8C5A3C] text-white font-display font-bold flex items-center justify-center mb-4 shadow-sm">
+                2
+              </div>
+              <span class="text-xs font-bold uppercase tracking-wider text-[#8C5A3C] block mb-1">Julio</span>
+              <h3 class="font-display font-bold text-xl text-[#1E1B18] mb-2">Legajos Limpios</h3>
+              <p class="text-sm sm:text-base text-[#1E1B18] font-medium leading-relaxed m-0">
+                Detectamos decimales invisibles en planillas que trababan el ingreso y creamos filtros para que nadie quede afuera.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#8C5A3C]/15 text-xs font-bold text-[#8C5A3C]">
+              Ingreso sin sorpresas
+            </div>
+          </div>
+
+          <div class="glass-card p-7 relative flex flex-col justify-between">
+            <div>
+              <div class="w-9 h-9 rounded-2xl bg-[#1F5E55] text-white font-display font-bold flex items-center justify-center mb-4 shadow-sm">
+                3
+              </div>
+              <span class="text-xs font-bold uppercase tracking-wider text-[#1F5E55] block mb-1">Agosto</span>
+              <h3 class="font-display font-bold text-xl text-[#1E1B18] mb-2">Historial Vivo</h3>
+              <p class="text-sm sm:text-base text-[#5A524C] leading-relaxed m-0">
+                Cada clase creada queda archivada y organizada por colores para reabrirla y mejorarla el próximo cuatrimestre.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#1F5E55]/15 text-xs font-semibold text-[#1F5E55]">
+              Tu material acumulable
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: TRANQUILIDAD Y PRIVACIDAD (Bento de Seguridad del Profesor) -->
+    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="4" data-phase="05 · Confianza y Seguridad">
+      <div class="w-full">
+        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">05 · Cuidado Docente</span>
+        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-8">
+          Tu cátedra es tuya: privacidad total sin letras chicas
+        </h2>
+
+        <!-- Bento Grid Visual -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 anim-cards">
+          <div class="md:col-span-7 glass-card p-8 flex flex-col justify-between border-2 border-[#C86D51]/45 bg-white/80">
+            <div>
+              <span class="glass-pill px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#C86D51] inline-block mb-4">Aislamiento Estricto</span>
+              <h3 class="font-display font-bold text-2xl sm:text-3xl text-[#1E1B18] mb-3">
+                Solo lee tus propios apuntes
+              </h3>
+              <p class="text-base sm:text-lg text-[#5A524C] leading-relaxed mb-4">
+                El motor de inteligencia artificial no mezcla materias ni inventa contenido de internet: se alimenta exclusivamente del material oficial que vos cargaste para tu cátedra.
+              </p>
+            </div>
+            <div class="p-4 rounded-2xl bg-[#FAF6F0] border border-[#8C5A3C]/20 flex items-center gap-3">
+              <span class="text-2xl">🔒</span>
+              <span class="text-xs sm:text-sm font-semibold text-[#1E1B18]">Protección de autoría intelectual y privacidad garantizada por ley</span>
+            </div>
+          </div>
+
+          <div class="md:col-span-5 flex flex-col gap-6 justify-between">
+            <div class="glass-card p-6 flex flex-col justify-between flex-1">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-[#8C5A3C] block mb-1">Acceso Protegido</span>
+                <h4 class="font-display font-bold text-xl text-[#1E1B18] mb-2">Ingreso Blindado</h4>
+                <p class="text-sm text-[#5A524C] m-0">
+                  Bloqueo automático ante intentos fallidos para proteger tu cuenta de cualquier prueba indebida.
+                </p>
+              </div>
+            </div>
+
+            <div class="glass-card p-6 flex flex-col justify-between flex-1 border-t-4 border-t-[#1F5E55]">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-[#1F5E55] block mb-1">Gratuito y Solidario</span>
+                <h4 class="font-display font-bold text-xl text-[#1E1B18] mb-2">20 Clases al Día</h4>
+                <p class="text-sm text-[#5A524C] m-0">
+                  Cuota diaria generosa que garantiza que todos los docentes de la facultad tengan respuesta rápida a costo cero.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: EL DOCENTE TIENE LA ÚLTIMA PALABRA (Diagrama de Retoque Quirúrgico) -->
+    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="5" data-phase="06 · Flexibilidad y Control">
+      <div class="w-full">
+        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">06 · Control Absoluto</span>
+        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-8">
+          La inteligencia artificial sugiere, vos tenés la última palabra
+        </h2>
+
+        <!-- Showcase de Flujo Quirúrgico -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 anim-cards">
+          <div class="glass-card p-8 flex flex-col justify-between">
+            <div>
+              <span class="glass-pill px-3 py-1 text-xs font-bold text-[#8C5A3C] inline-block mb-4">1 · A Tu Medida</span>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">Elegí el Enfoque</h3>
+              <p class="text-base text-[#5A524C] leading-relaxed m-0">
+                Seleccioná si querés una clase teórica, práctica de laboratorio o con ejemplos de empresas regionales.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#8C5A3C]/15 text-xs font-bold text-[#8C5A3C]">
+              DURACIÓN Y NIVEL CONFIGURABLES
+            </div>
+          </div>
+
+          <div class="glass-card p-8 flex flex-col justify-between border-2 border-[#C86D51]/55 bg-white/85 shadow-lg">
+            <div>
+              <span class="glass-pill px-3 py-1 text-xs font-bold text-[#C86D51] inline-block mb-4">2 · Retoque Quirúrgico</span>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">¿Una sola no te gustó?</h3>
+              <p class="text-base text-[#1E1B18] font-medium leading-relaxed m-0">
+                Tocás un botón y regenerás quirúrgicamente solo esa diapositiva sin perder ni alterar el resto de la clase.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#C86D51]/25 text-xs font-bold text-[#C86D51]">
+              CERO TIEMPO REHACIENDO TODO
+            </div>
+          </div>
+
+          <div class="glass-card p-8 flex flex-col justify-between">
+            <div>
+              <span class="glass-pill px-3 py-1 text-xs font-bold text-[#1F5E55] inline-block mb-4">3 · Ajuste Final</span>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">Edición a Mano</h3>
+              <p class="text-base text-[#5A524C] leading-relaxed m-0">
+                Cambiá un título, agregá una aclaración propia y descargá la presentación en segundos lista para el proyector.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#1F5E55]/15 text-xs font-bold text-[#1F5E55]">
+              VOS SOS EL DUEÑO DEL MATERIAL
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: DISEÑADO PARA TU VIDA REAL (Comodidad en el Celular y Cero Fricción) -->
+    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="6" data-phase="07 · Diseño Humano e Inclusivo">
+      <div class="w-full">
+        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">07 · Comodidad Diaria</span>
+        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-8">
+          Pensado para cómo trabajás de verdad: en el aula, en tu casa o en el celular
+        </h2>
+
+        <!-- Gráficos de Experiencia Real -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 anim-cards">
+          <div class="glass-card p-8 text-left flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-[#C86D51]/15 text-[#C86D51] flex items-center justify-center text-2xl mb-4">
+                👓
+              </div>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">Lectura Descansada</h3>
+              <p class="text-base text-[#5A524C] leading-relaxed m-0">
+                Diseño nítido y letras grandes para que no tengas que forzar la vista ni cambiar los lentes frente a la pantalla.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#8C5A3C]/15 text-xs font-bold text-[#C86D51]">
+              CONFORT VISUAL ABSOLUTO
+            </div>
+          </div>
+
+          <div class="glass-card p-8 text-left flex flex-col justify-between border-2 border-[#8C5A3C]/40 bg-white/75">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-[#8C5A3C]/15 text-[#8C5A3C] flex items-center justify-center text-2xl mb-4">
+                📱
+              </div>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">En el Celular</h3>
+              <p class="text-base text-[#1E1B18] font-medium leading-relaxed m-0">
+                Botones cómodos y paneles táctiles para revisar o armar una clase mientras viajás o esperás que abra el aula.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#8C5A3C]/20 text-xs font-bold text-[#8C5A3C]">
+              LISTO EN CUALQUIER DISPOSITIVO
+            </div>
+          </div>
+
+          <div class="glass-card p-8 text-left flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-[#1F5E55]/15 text-[#1F5E55] flex items-center justify-center text-2xl mb-4">
+                🛡️
+              </div>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">Cero Fallas</h3>
+              <p class="text-base text-[#5A524C] leading-relaxed m-0">
+                Cada funcionalidad fue probada con simulaciones automatizadas para asegurarnos de que el día de tu clase todo ande perfecto.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#1F5E55]/15 text-xs font-bold text-[#1F5E55]">
+              CONFIABILIDAD COMPROBADA
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: LA DEMO EN VIVO (MOMENTO CUMBRE - Interactive Live Simulator) -->
     <section class="slide-frame w-full flex-col justify-center py-6" data-slide="7" data-phase="08 · Prueba en Vivo">
-      <div class="max-w-4xl mx-auto w-full text-center">
-        <div class="inline-flex items-center gap-2 glass-pill px-5 py-2 mb-7 border-2 border-[#1F5E55]/40">
-          <span class="w-2.5 h-2.5 rounded-full bg-[#1F5E55]"></span>
-          <span class="text-xs font-bold tracking-widest uppercase text-[#1F5E55]">Momento de la Demostración en Vivo</span>
+      <div class="max-w-4xl mx-auto w-full text-center anim-hero">
+        <div class="inline-flex items-center gap-2 glass-pill px-5 py-2 mb-6 border-2 border-[#1F5E55]/40 shadow-sm">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#1F5E55] animate-ping"></span>
+          <span class="text-xs font-bold tracking-widest uppercase text-[#1F5E55]">Demostración en Tiempo Real</span>
+        </div>
+
+        <h2 class="font-display font-extrabold text-5xl sm:text-6xl text-[#1E1B18] leading-tight mb-5">
+          Veámoslo funcionar <span class="text-[#C86D51]">en directo</span>
+        </h2>
+
+        <p class="text-xl sm:text-2xl text-[#5A524C] font-medium max-w-2xl mx-auto leading-relaxed mb-8">
+          Elijan ustedes cualquier tema de sus cátedras y armemos la clase juntos ahora mismo en pantalla.
+        </p>
+
+        <!-- Mockup Visual Interactivo de 3 Pasos con Mini-Timeline -->
+        <div class="glass-card p-6 sm:p-8 max-w-3xl mx-auto bg-white/85 shadow-2xl border-2 border-white mb-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+            <div class="p-4 rounded-2xl bg-[#FAF6F0] border border-[#C86D51]/30">
+              <span class="text-xs font-bold text-[#C86D51] uppercase tracking-wider block mb-1">Toque 1</span>
+              <div class="font-display font-bold text-lg text-[#1E1B18] mb-1">Tu Legajo</div>
+              <p class="text-xs text-[#5A524C] m-0">Reconoce tus materias asignadas de inmediato.</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-[#FAF6F0] border border-[#8C5A3C]/30">
+              <span class="text-xs font-bold text-[#8C5A3C] uppercase tracking-wider block mb-1">Toque 2</span>
+              <div class="font-display font-bold text-lg text-[#1E1B18] mb-1">Tema y Estilo</div>
+              <p class="text-xs text-[#5A524C] m-0">Elegís duración, nivel y tipo de ejemplos.</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-emerald-50/80 border border-[#1F5E55]/40">
+              <span class="text-xs font-bold text-[#1F5E55] uppercase tracking-wider block mb-1">Toque 3</span>
+              <div class="font-display font-bold text-lg text-[#1E1B18] mb-1">Clase Completa</div>
+              <p class="text-xs text-[#1F5E55] font-medium m-0">Diapositivas y cronograma listos para proyectar.</p>
+            </div>
+          </div>
+        </div>
+
+        <span class="text-xs font-bold tracking-wider text-[#8C5A3C] uppercase">
+          Pasamos ahora a la ventana del sistema en vivo
+        </span>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: CIERRE Y CONVERSACIÓN (Agradecimiento Institucional y Espacio Abierto) -->
+    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="8" data-phase="09 · Preguntas y Diálogo">
+      <div class="max-w-4xl mx-auto w-full text-center anim-hero">
+        <div class="inline-flex items-center gap-2 glass-pill px-4 py-1.5 mb-6">
+          <span class="w-2 h-2 rounded-full bg-[#C86D51]"></span>
+          <span class="text-xs font-bold tracking-widest uppercase text-[#8C5A3C]">Espacio de Preguntas y Diálogo</span>
         </div>
 
         <h2 class="font-display font-extrabold text-5xl sm:text-6xl text-[#1E1B18] leading-tight mb-6">
-          Pasemos a la <span class="text-[#C86D51]">prueba en vivo</span>
+          El aula del futuro <span class="text-[#C86D51]">se construye hoy</span>
         </h2>
 
-        <p class="text-xl sm:text-2xl text-[#5A524C] font-medium max-w-2xl mx-auto leading-relaxed mb-9">
-          Elijamos ahora una materia y un tema real para generar una clase frente a ustedes en tres toques.
-        </p>
+        <div class="glass-card p-8 sm:p-10 max-w-2xl mx-auto mb-8 shadow-xl bg-white/85 border-2 border-white">
+          <p class="text-xl sm:text-2xl text-[#1E1B18] font-medium leading-relaxed mb-4">
+            Gracias por acompañarnos y ayudarnos a construir una herramienta que le devuelva tiempo a quienes enseñan.
+          </p>
+          <div class="text-sm font-semibold text-[#8C5A3C]">
+            ¿Qué materia de sus cátedras les gustaría probar ahora?
+          </div>
+        </div>
 
-        <div class="inline-flex flex-wrap items-center justify-center gap-3 glass-pill px-6 py-3 text-sm font-semibold text-[#8C5A3C]">
-          <span>1. Ingresar Legajo</span>
-          <span class="text-[#C86D51]">→</span>
-          <span>2. Elegir Tema y Estilo</span>
-          <span class="text-[#C86D51]">→</span>
-          <span>3. Ver Clase en Vivo</span>
+        <div class="text-sm font-semibold tracking-wide uppercase text-[#8C5A3C] space-y-1">
+          <div>UTN Facultad Regional Delta · Campana · Pasantía Universitaria 2026</div>
+          <div class="text-xs text-[#5A524C] font-normal">Supervisión: Karen Villalba · Liderazgo: Juan Martin Ávila y Sofía Azul Perman</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: LO QUE ME LLEVO HOY (Reflexión Final de Pasantía) -->
+    <section class="slide-frame w-full flex-col justify-center py-6" data-slide="9" data-phase="10 · Lo Que Me Llevo Hoy">
+      <div class="w-full">
+        <span class="text-xs font-bold tracking-widest uppercase text-[#C86D51] block mb-2">10 · Aprendizaje Personal y Profesional</span>
+        <h2 class="font-display font-bold text-4xl sm:text-5xl text-[#1E1B18] mb-8">
+          Lo que me llevo de estos tres meses en la facultad
+        </h2>
+
+        <!-- Infografía de Madurez -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 anim-cards">
+          <div class="glass-card p-8 flex flex-col justify-between border-t-4 border-t-[#C86D51]">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-widest text-[#C86D51] block mb-2">Crecimiento Técnico</span>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">Salir del Aula Escolar</h3>
+              <p class="text-base text-[#5A524C] leading-relaxed m-0">
+                Aprendí que en la ingeniería de verdad primero se escribe el plan, se documentan las decisiones y se diseña pensando en que el sistema dure en el tiempo.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#8C5A3C]/15 text-xs font-bold text-[#8C5A3C]">
+              RIGOR Y DISCIPLINA
+            </div>
+          </div>
+
+          <div class="glass-card p-8 flex flex-col justify-between border-2 border-[#8C5A3C]/35 bg-white/75">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-widest text-[#8C5A3C] block mb-2">Escucha y Empatía</span>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">Diseñar para el Otro</h3>
+              <p class="text-base text-[#1E1B18] font-medium leading-relaxed m-0">
+                Comprendí que la mejor tecnología no es la que presume complejidad, sino la que escucha con humildad las necesidades de los profesores y les resuelve el día.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#8C5A3C]/20 text-xs font-bold text-[#8C5A3C]">
+              VALOR HUMANO
+            </div>
+          </div>
+
+          <div class="glass-card p-8 flex flex-col justify-between border-t-4 border-t-[#1F5E55]">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-widest text-[#1F5E55] block mb-2">Compromiso Institucional</span>
+              <h3 class="font-display font-bold text-2xl text-[#1E1B18] mb-3">Orgullo UTN FRD</h3>
+              <p class="text-base text-[#5A524C] leading-relaxed m-0">
+                La alegría de dejar una herramienta viva y útil para los mismos docentes que nos enseñan y nos abrieron las puertas de esta casa.
+              </p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-[#1F5E55]/15 text-xs font-bold text-[#1F5E55]">
+              HECHO EN CASA
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -466,10 +737,10 @@
   <footer class="relative z-20 w-full max-w-7xl mx-auto px-6 pb-5 pt-2 flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <span id="slideCounter" class="font-display font-bold text-sm text-[#1E1B18] glass-pill px-4 py-1.5">
-        01 / 08
+        01 / 10
       </span>
       <span class="text-xs text-[#5A524C] hidden sm:inline">
-        Flechas <kbd class="px-1.5 py-0.5 rounded bg-white/70 border border-white text-[#1E1B18]">←</kbd> <kbd class="px-1.5 py-0.5 rounded bg-white/70 border border-white text-[#1E1B18]">→</kbd> para avanzar · <kbd class="px-1.5 py-0.5 rounded bg-white/70 border border-white text-[#1E1B18]">N</kbd> para Notas de Orador
+        Flechas <kbd class="px-1.5 py-0.5 rounded bg-white/70 border border-white text-[#1E1B18]">←</kbd> <kbd class="px-1.5 py-0.5 rounded bg-white/70 border border-white text-[#1E1B18]">→</kbd> para navegar · <kbd class="px-1.5 py-0.5 rounded bg-white/70 border border-white text-[#1E1B18]">N</kbd> para Notas de Orador
       </span>
     </div>
 
@@ -494,7 +765,7 @@
           </h3>
         </div>
         <div class="flex items-center gap-2">
-          <span id="notesTimer" class="text-xs font-semibold text-[#8C5A3C] glass-pill px-3 py-1">Tiempo sugerido: 45 s</span>
+          <span id="notesTimer" class="text-xs font-semibold text-[#8C5A3C] glass-pill px-3 py-1">Tiempo sugerido: 1 min</span>
           <button id="btnCloseNotes" type="button" class="glass-pill px-3 py-1 text-xs font-bold text-[#1E1B18] hover:bg-white">
             Cerrar ✕
           </button>
@@ -511,14 +782,14 @@
     <div class="glass-card bg-[#FAF6F0]/95 max-w-5xl w-full p-6 sm:p-8 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between pb-4 mb-4 border-b border-[#8C5A3C]/20">
         <div>
-          <span class="text-xs font-bold uppercase tracking-widest text-[#C86D51]">Estructura Ágil para Demo en Vivo</span>
-          <h3 class="font-display font-bold text-2xl text-[#1E1B18] m-0">Mapa de la Presentación (8 Diapositivas · 8 Formatos Distintos)</h3>
+          <span class="text-xs font-bold uppercase tracking-widest text-[#C86D51]">Estructura de 10 Minutos</span>
+          <h3 class="font-display font-bold text-2xl text-[#1E1B18] m-0">Mapa de la Presentación (10 Diapositivas)</h3>
         </div>
         <button id="btnCloseOverview" type="button" class="glass-pill px-4 py-1.5 text-xs font-bold text-[#1E1B18] hover:bg-white">
           Cerrar ✕
         </button>
       </div>
-      <div id="overviewGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 overflow-y-auto pr-1">
+      <div id="overviewGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 overflow-y-auto pr-1">
         <!-- Populated by JS -->
       </div>
     </div>
@@ -529,73 +800,101 @@
       {
         slide: 1,
         title: "De la teoría al aula en tres toques",
-        time: "40 s",
+        time: "1 min",
         paragraphs: [
-          "Buenos días a todos, profesores, tutores y compañeros. Hoy queremos presentarles UTNContenidos, el sistema que desarrollamos durante nuestra pasantía en la UTN Facultad Regional Delta.",
-          "Como hoy vamos a hacer una prueba en vivo del sistema funcionando, preparamos un recorrido ágil para contarles cómo llegamos a la facultad, cuál fue el contexto y el objetivo, qué herramientas usamos, qué resultados logramos y qué aprendizajes nos llevamos."
+          "Buenos días a todos, profesores, tutores y compañeros. Es una alegría enorme estar hoy acá compartiendo el resultado de este proyecto.",
+          "Quiero agradecer de manera muy sentida a nuestra tutora Karen Villalba y a los líderes de proyecto, Juan Martin Ávila y Sofía Azul Perman, por guiarnos, exigirnos y confiar en nosotros durante toda la pasantía.",
+          "Hoy no venimos a hablarles de código abstracto. Venimos a hablar de cómo le cambiamos la vida al profesor: cómo devolvemos horas libres los fines de semana haciendo que armar una clase sea cuestión de apenas tres toques."
         ]
       },
       {
         slide: 2,
-        title: "Del aula escolar al desafío universitario",
-        time: "45 s",
+        title: "Preparar la clase no debería consumir tu fin de semana",
+        time: "1 min",
         paragraphs: [
-          "Empecemos por cómo llegamos a la facultad. Veníamos desde nuestra escuela con conocimientos técnicos y muchas ganas, pero acostumbrados a resolver trabajos prácticos cerrados donde ya todo está armado.",
-          "Gracias a la pasantía en la UTN FRD, dimos el salto a un entorno universitario real: nos recibieron con las puertas abiertas y nos plantearon el desafío de crear una herramienta que les sirviera de verdad a los docentes de esta casa."
+          "Cualquiera que haya dado clases sabe lo que pasa un domingo a la tarde: sabés perfectamente qué querés enseñar, pero estás cuatro o cinco horas pegado a la pantalla pensando cómo maquetar las diapositivas, cómo ordenar el cronograma y qué ejercicios poner.",
+          "Ese trabajo mecánico desgasta y le roba tiempo valioso a la docencia. Con UTNContenidos bajamos ese tiempo de cuatro horas a tres minutos.",
+          "No reemplazamos al docente: le sacamos la carga pesada de encima para que llegue al aula descansado y con ganas de enseñar."
         ]
       },
       {
         slide: 3,
-        title: "Devolverle tiempo de calidad al docente",
-        time: "50 s",
+        title: "Chocar con la realidad nos enseñó a pensar en vos",
+        time: "1 min",
         paragraphs: [
-          "¿Cuál era el contexto? Nuestros profesores dominan su materia, pero pierden horas todas las semanas frente a una hoja en blanco armando diapositivas, cronogramas y ejemplos para que los alumnos entiendan mejor.",
-          "De ese contexto nació nuestro objetivo principal: lograr que cualquier docente entre con su legajo y en apenas tres toques transforme sus propios apuntes de cátedra en una clase dinámica y completa, a costo cero absoluto."
+          "El 8 de mayo, cuando arrancamos la pasantía, caímos en la trampa típica de querer armar algo gigante en la teoría pero impracticable en la realidad.",
+          "Pensamos en servidores locales que cada profesor tenía que prender en su máquina y en modelos pesados sin conexión. Cuando lo vimos con los tutores, nos dimos cuenta enseguida: ningún docente va a perder tiempo instalando software raro.",
+          "Por eso dimos un giro total: armamos una plataforma web limpia, accesible desde cualquier computadora o celular, a costo cero y sin pedirte ninguna configuración previa."
         ]
       },
       {
         slide: 4,
-        title: "Teníamos el qué, nos faltaba el cómo",
-        time: "50 s",
+        title: "Aprender de los errores para que a vos nunca te falle",
+        time: "1 min",
         paragraphs: [
-          "El 8 de mayo, en el primer relevamiento, chocamos de frente con la realidad. Nuestra primera idea era inviable: queríamos levantar un servidor local en cada computadora, correr un modelo pesado sin internet y conectarnos a una base de datos de la UTN que no existía.",
-          "Como anotamos en el documento cronológico: 'Teníamos el qué, pero no el cómo'. Gracias a las charlas con los tutores, dimos el giro hacia una plataforma 100% en la nube, accesible desde cualquier navegador sin instalar nada."
+          "A lo largo de los meses fuimos puliendo cada detalle con los problemas de la vida real.",
+          "Cuando salimos a la web en junio, descubrimos que las planillas de cálculo a veces le ponían un decimal invisible a los números de legajo, y eso trababa el ingreso. En lugar de ignorarlo, escribimos filtros para normalizarlo y asegurar que todo docente entre a la primera.",
+          "Y sumamos un historial inteligente para que cada clase que armes quede guardada y lista para reusar el año siguiente."
         ]
       },
       {
         slide: 5,
-        title: "Herramientas modernas a costo cero",
-        time: "50 s",
+        title: "Tu cátedra es tuya: privacidad total sin letras chicas",
+        time: "1 min",
         paragraphs: [
-          "En cuanto a las herramientas utilizadas, el proyecto vivió dos grandes etapas. Primero validamos la idea rápido y gratis usando Google Sheets y Google Apps Script para demostrar que el flujo servía.",
-          "Cuando nos topamos con límites técnicos —como el corte de 6 minutos o legajos que venían con '.0'—, dimos el salto a herramientas de producción: Next.js 15 en Vercel, base de datos relacional en Supabase con seguridad por fila, búsqueda semántica sobre los apuntes del propio profesor y presentaciones en Reveal.js y PDF."
+          "Para que una herramienta sirva, el profesor tiene que confiar en ella con los ojos cerrados.",
+          "Por eso diseñamos un blindaje estricto: el sistema consulta pura y exclusivamente los apuntes y programas oficiales de tu propia materia. No inventa información ni mezcla apuntes de otras cátedras.",
+          "Tus contenidos son tuyos, están protegidos y disponés de una cuota diaria de veinte clases para usarlo cuantas veces necesites sin pagar nunca nada."
         ]
       },
       {
         slide: 6,
-        title: "Control total y diseño para todos",
+        title: "La inteligencia artificial sugiere, vos tenés la última palabra",
         time: "1 min",
         paragraphs: [
-          "¿Cuál es el resultado que van a ver ahora en la prueba en vivo? Un sistema blindado donde el docente tiene siempre la última palabra: recibe cuatro entregas didácticas y, si una sola diapositiva no le convence, usa el botón 'Reformular esta diapositiva' o la edita a mano sin perder el resto de la clase.",
-          "Además, diseñamos todo pensando en el caso de uso de un profesor de 65 años: letra amplia de 18 píxeles, alto contraste visual, uso cómodo desde el celular y 36 pruebas automatizadas que garantizan que nada falle."
+          "Un miedo habitual con la inteligencia artificial es perder el control de la clase. En UTNContenidos la tecnología propone, pero vos decidís absolutamente todo.",
+          "Elegís el enfoque pedagógico y la duración. Y si generás una clase de diez diapositivas y hay una sola que no te convence, no tenés que empezar de cero: tocás un botón y el sistema regenera solo esa diapositiva puntual.",
+          "O la editás vos mismo a mano antes de descargarla o proyectarla. El criterio docente sigue siendo el rey."
         ]
       },
       {
         slide: 7,
-        title: "Crecer como estudiantes y profesionales",
-        time: "50 s",
+        title: "Pensado para cómo trabajás de verdad",
+        time: "1 min",
         paragraphs: [
-          "En lo personal, esta experiencia nos cambió la cabeza: pasamos de hacer código para aprobar una entrega a escuchar el feedback real de un usuario y entender sus tiempos y necesidades.",
-          "Y como aprendizaje técnico nos llevamos una regla de oro que aplicamos en cada etapa del repositorio: 'Primero escribo el plan, después programo'. Documentar el porqué de cada decisión es lo que permite que este proyecto quede vivo para la facultad."
+          "Pensamos el diseño poniéndonos en el lugar de nuestros profesores. No queríamos pantallas recargadas que cansen la vista ni letras enanas que te obliguen a buscar los anteojos.",
+          "Elegimos tipografías grandes, descansadas y con alto contraste. Y además, hicimos que todo funcione perfecto desde el celular, con botones generosos para que puedas chequear o preparar una clase mientras viajás a la facultad.",
+          "Probamos todo con simulaciones automáticas para garantizar que cuando lo uses en el aula, responda siempre."
         ]
       },
       {
         slide: 8,
-        title: "Pasemos a la prueba en vivo",
-        time: "30 s + Demo",
+        title: "Veámoslo funcionar en directo",
+        time: "1 min + Demostración",
         paragraphs: [
-          "Y como la mejor manera de evaluar un sistema es viéndolo trabajar, pasamos ahora mismo a la demostración en vivo.",
-          "Los invitamos a decirnos un tema de sus materias para hacer juntos los tres toques en pantalla. ¡Muchas gracias!"
+          "Y como la mejor prueba es ver cómo te soluciona el día en la práctica, pasemos ahora mismo a la demostración en vivo.",
+          "Les pido a cualquiera de los profesores presentes que me diga una materia y un tema que tengan que dar esta semana. Vamos a ingresar, tocar tres botones y ver cómo en segundos tenemos la clase armada lista para proyectar.",
+          "Pasemos a la pantalla del sistema."
+        ]
+      },
+      {
+        slide: 9,
+        title: "El aula del futuro se construye hoy",
+        time: "1 min",
+        paragraphs: [
+          "Para abrir la conversación, quiero agradecerles a todos por el tiempo, el espacio y la calidez con la que siempre nos recibieron.",
+          "Un agradecimiento especial una vez más a Karen Villalba, a Juan Martin Ávila y a Sofía Azul Perman por guiarnos y acompañarnos en cada paso.",
+          "Quedamos a total disposición para responder preguntas o seguir probando materias en vivo en el sistema."
+        ]
+      },
+      {
+        slide: 10,
+        title: "Lo que me llevo de estos tres meses en la facultad",
+        time: "1 min",
+        paragraphs: [
+          "Mirando hacia atrás, estos tres meses de pasantía en la UTN Facultad Regional Delta me cambiaron profundamente la perspectiva como futuro profesional.",
+          "Aprendí a salir de la burbuja escolar: entendí que un sistema no es bueno por ser rebuscado, sino por el impacto positivo y concreto que genera en la vida cotidiana de las personas que lo usan.",
+          "Es un honor y un orgullo enorme haber podido trabajar junto al equipo para dejarle a nuestra facultad una herramienta útil, gratuita y hecha con el corazón en casa. ¡Muchísimas gracias!"
         ]
       }
     ];
@@ -622,6 +921,59 @@
     let currentIndex = 0;
     let notesOpen = false;
 
+    // GSAP Timeline Runner for Slide Transitions (Smooth AE Physics)
+    function animateSlideEnter(slideEl) {
+      if (!window.gsap) return;
+
+      const hero = slideEl.querySelectorAll('.anim-hero, h1, h2');
+      const cards = slideEl.querySelectorAll('.anim-cards > div, .glass-card');
+      const pills = slideEl.querySelectorAll('.glass-pill');
+      const meterBars = slideEl.querySelectorAll('.meter-bar');
+
+      gsap.killTweensOf([hero, cards, pills, meterBars]);
+
+      gsap.set(slideEl, { opacity: 1 });
+      const tl = gsap.timeline();
+
+      if (hero.length > 0) {
+        tl.fromTo(hero, 
+          { opacity: 0, y: 32, scale: 0.98 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.65, ease: "power3.out" }
+        );
+      }
+
+      if (cards.length > 0) {
+        tl.fromTo(cards,
+          { opacity: 0, y: 28, rotationX: 6, transformOrigin: "top center" },
+          { 
+            opacity: 1, 
+            y: 0, 
+            rotationX: 0,
+            duration: 0.55, 
+            stagger: 0.07, 
+            ease: "power2.out"
+          },
+          "-=0.4"
+        );
+      }
+
+      if (pills.length > 0) {
+        tl.fromTo(pills,
+          { opacity: 0, scale: 0.94 },
+          { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.3)" },
+          "-=0.3"
+        );
+      }
+
+      if (meterBars.length > 0) {
+        tl.fromTo(meterBars,
+          { width: "0%" },
+          { width: "92%", duration: 1.1, ease: "power3.out" },
+          "-=0.2"
+        );
+      }
+    }
+
     function buildNavigation() {
       slideDots.innerHTML = '';
       overviewGrid.innerHTML = '';
@@ -629,21 +981,21 @@
       slides.forEach((slideEl, idx) => {
         const dot = document.createElement('button');
         dot.type = 'button';
-        dot.className = 'w-2.5 h-2.5 rounded-full transition-all duration-300 ' +
-          (idx === currentIndex ? 'bg-[#C86D51] w-6' : 'bg-[#8C5A3C]/30 hover:bg-[#8C5A3C]/60');
+        dot.className = 'h-2.5 rounded-full transition-all duration-300 ' +
+          (idx === currentIndex ? 'bg-[#C86D51] w-6' : 'bg-[#8C5A3C]/30 hover:bg-[#8C5A3C]/60 w-2.5');
         dot.setAttribute('aria-label', 'Ir a diapositiva ' + (idx + 1));
         dot.addEventListener('click', () => goToSlide(idx));
         slideDots.appendChild(dot);
 
-        const noteInfo = SPEAKER_NOTES[idx];
+        const noteInfo = SPEAKER_NOTES[idx] || { time: '1 min', title: 'Diapositiva' };
         const card = document.createElement('button');
         card.type = 'button';
-        card.className = 'text-left p-4 rounded-2xl border transition all ' +
+        card.className = 'text-left p-4 rounded-2xl border transition-all duration-200 ' +
           (idx === currentIndex
-            ? 'bg-white border-[#C86D51] shadow-md'
-            : 'bg-white/60 border-white hover:bg-white');
+            ? 'bg-white border-[#C86D51] shadow-md ring-2 ring-[#C86D51]/30'
+            : 'bg-white/70 border-white hover:bg-white hover:shadow-sm');
         card.innerHTML = `
-          <div class="flex items-center justify-between text-xs font-bold text-[#8C5A3C] mb-1">
+          <div class="flex items-center justify-between text-xs font-bold text-[#8C5A3C] mb-1.5">
             <span>Slide ${String(idx + 1).padStart(2, '0')}</span>
             <span>${noteInfo.time}</span>
           </div>
@@ -659,6 +1011,7 @@
 
     function updateSpeakerNotes() {
       const info = SPEAKER_NOTES[currentIndex];
+      if (!info) return;
       notesTitle.textContent = `Notas de Orador · Diapositiva ${String(info.slide).padStart(2, '0')}: ${info.title}`;
       notesTimer.textContent = `Tiempo sugerido: ${info.time}`;
       notesBody.innerHTML = info.paragraphs.map(p => `<p class="m-0">${p}</p>`).join('');
@@ -666,25 +1019,33 @@
 
     function goToSlide(index) {
       if (index < 0 || index >= slides.length) return;
-      slides[currentIndex].classList.remove('active');
+      
+      const prevSlide = slides[currentIndex];
+      prevSlide.classList.remove('active');
+      
       currentIndex = index;
-      slides[currentIndex].classList.add('active');
+      const nextSlide = slides[currentIndex];
+      nextSlide.classList.add('active');
 
       const num = String(currentIndex + 1).padStart(2, '0');
       const total = String(slides.length).padStart(2, '0');
       slideCounter.textContent = `${num} / ${total}`;
-      phaseBadge.textContent = slides[currentIndex].getAttribute('data-phase') || '';
+      phaseBadge.textContent = nextSlide.getAttribute('data-phase') || '';
 
       btnPrev.disabled = currentIndex === 0;
       btnNext.textContent = currentIndex === slides.length - 1 ? 'Reiniciar ↺' : 'Siguiente →';
 
-      const shiftX = (currentIndex % 3 - 1) * 28;
-      const shiftY = (currentIndex % 2 === 0 ? 1 : -1) * 18;
-      orb1.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
-      orb2.style.transform = `translate(${-shiftX}px, ${-shiftY}px)`;
+      // GSAP Ambient Orbs Motion
+      const shiftX = (currentIndex % 3 - 1) * 36;
+      const shiftY = (currentIndex % 2 === 0 ? 1 : -1) * 22;
+      if (window.gsap) {
+        gsap.to(orb1, { x: shiftX, y: shiftY, duration: 1.2, ease: "power2.out" });
+        gsap.to(orb2, { x: -shiftX, y: -shiftY, duration: 1.2, ease: "power2.out" });
+      }
 
       buildNavigation();
       updateSpeakerNotes();
+      animateSlideEnter(nextSlide);
     }
 
     function toggleNotes(forceState) {
@@ -701,6 +1062,12 @@
       if (show) {
         overviewModal.classList.remove('hidden');
         overviewModal.classList.add('flex');
+        if (window.gsap) {
+          gsap.fromTo("#overviewModal .glass-card", 
+            { scale: 0.94, opacity: 0 }, 
+            { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(1.2)" }
+          );
+        }
       } else {
         overviewModal.classList.add('hidden');
         overviewModal.classList.remove('flex');
